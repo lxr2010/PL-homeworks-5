@@ -6,6 +6,36 @@ var Caml_obj = require("rescript/lib/js/caml_obj.js");
 var Belt_List = require("rescript/lib/js/belt_List.js");
 var Belt_SetString = require("rescript/lib/js/belt_SetString.js");
 
+function toStringE(e) {
+  switch (e.TAG | 0) {
+    case /* CstI */0 :
+        return e._0.toString();
+    case /* CstB */1 :
+        if (e._0) {
+          return "True";
+        } else {
+          return "False";
+        }
+    case /* Var */2 :
+        return e._0;
+    case /* If */3 :
+        return "If (" + toStringE(e._0) + ") then { " + toStringE(e._1) + " } else { " + toStringE(e._2) + " }";
+    case /* Add */4 :
+        return "( " + toStringE(e._0) + "+" + toStringE(e._1) + " )";
+    case /* Mul */5 :
+        return "( " + toStringE(e._0) + "*" + toStringE(e._1) + " )";
+    case /* Leq */6 :
+        return toStringE(e._0) + "<=" + toStringE(e._1);
+    case /* Fun */7 :
+        return "fun " + e._0 + " -> " + toStringE(e._1);
+    case /* App */8 :
+        return "( " + toStringE(e._0) + " )( " + toStringE(e._1) + " )";
+    case /* Let */9 :
+        return "let " + e._0 + " = " + toStringE(e._1) + " in " + toStringE(e._2);
+    
+  }
+}
+
 function toString(_t) {
   while(true) {
     var t = _t;
@@ -143,7 +173,7 @@ function get_level(tvar) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "LvLetPoly.res",
-          69,
+          83,
           11
         ],
         Error: new Error()
@@ -273,7 +303,7 @@ function unify(_t1, _t2) {
                 RE_EXN_ID: "Assert_failure",
                 _1: [
                   "LvLetPoly.res",
-                  116,
+                  130,
                   10
                 ],
                 Error: new Error()
@@ -285,7 +315,7 @@ function unify(_t1, _t2) {
                   RE_EXN_ID: "Assert_failure",
                   _1: [
                     "LvLetPoly.res",
-                    109,
+                    123,
                     12
                   ],
                   Error: new Error()
@@ -382,7 +412,7 @@ function inst(ty, level) {
                   RE_EXN_ID: "Assert_failure",
                   _1: [
                     "LvLetPoly.res",
-                    160,
+                    174,
                     15
                   ],
                   Error: new Error()
@@ -433,7 +463,7 @@ function gen(ty, level) {
                 RE_EXN_ID: "Assert_failure",
                 _1: [
                   "LvLetPoly.res",
-                  182,
+                  196,
                   19
                 ],
                 Error: new Error()
@@ -445,6 +475,7 @@ function gen(ty, level) {
 }
 
 function check_expr(ctx, expr, level) {
+  console.log("Checking " + toStringE(expr) + " on level " + level.toString());
   switch (expr.TAG | 0) {
     case /* CstI */0 :
         return /* TInt */0;
@@ -461,7 +492,7 @@ function check_expr(ctx, expr, level) {
               RE_EXN_ID: "Assert_failure",
               _1: [
                 "LvLetPoly.res",
-                195,
+                210,
                 15
               ],
               Error: new Error()
@@ -476,14 +507,17 @@ function check_expr(ctx, expr, level) {
         unify(t3, tx);
         return tx;
     case /* Add */4 :
+    case /* Mul */5 :
+        break;
+    case /* Leq */6 :
         var tx$1 = new_tvar(level);
         var t1$1 = check_expr(ctx, expr._0, level);
         var t2$1 = check_expr(ctx, expr._1, level);
-        unify(tx$1, /* TInt */0);
+        unify(tx$1, /* TBool */1);
         unify(t1$1, /* TInt */0);
         unify(t2$1, /* TInt */0);
         return tx$1;
-    case /* Fun */5 :
+    case /* Fun */7 :
         var tx$2 = new_tvar(level);
         var te = check_expr({
               hd: [
@@ -497,7 +531,7 @@ function check_expr(ctx, expr, level) {
                 _0: tx$2,
                 _1: te
               };
-    case /* App */6 :
+    case /* App */8 :
         var tx$3 = new_tvar(level);
         var t1$2 = check_expr(ctx, expr._0, level);
         var t2$2 = check_expr(ctx, expr._1, level);
@@ -507,10 +541,18 @@ function check_expr(ctx, expr, level) {
               _1: tx$3
             });
         return tx$3;
-    case /* Let */7 :
-        var t1$3 = check_expr(ctx, expr._1, level + 1 | 0);
+    case /* Let */9 :
+        var x = expr._0;
+        var tx$4 = new_tvar(level + 1 | 0);
+        var t1$3 = check_expr({
+              hd: [
+                x,
+                tx$4
+              ],
+              tl: ctx
+            }, expr._1, level + 1 | 0);
         var ctx$p_0 = [
-          expr._0,
+          x,
           gen(t1$3, level)
         ];
         var ctx$p = {
@@ -518,10 +560,18 @@ function check_expr(ctx, expr, level) {
           tl: ctx
         };
         var t2$3 = check_expr(ctx$p, expr._2, level);
+        unify(tx$4, t1$3);
         console.log(toStringSubst(ctx$p));
         return t2$3;
     
   }
+  var tx$5 = new_tvar(level);
+  var t1$4 = check_expr(ctx, expr._0, level);
+  var t2$4 = check_expr(ctx, expr._1, level);
+  unify(tx$5, /* TInt */0);
+  unify(t1$4, /* TInt */0);
+  unify(t2$4, /* TInt */0);
+  return tx$5;
 }
 
 function infer(expr) {
@@ -529,13 +579,13 @@ function infer(expr) {
 }
 
 var test = {
-  TAG: /* Let */7,
+  TAG: /* Let */9,
   _0: "h",
   _1: {
-    TAG: /* Fun */5,
+    TAG: /* Fun */7,
     _0: "f",
     _1: {
-      TAG: /* Let */7,
+      TAG: /* Let */9,
       _0: "g",
       _1: {
         TAG: /* Var */2,
@@ -550,7 +600,7 @@ var test = {
   _2: {
     TAG: /* If */3,
     _0: {
-      TAG: /* App */6,
+      TAG: /* App */8,
       _0: {
         TAG: /* Var */2,
         _0: "h"
@@ -561,7 +611,7 @@ var test = {
       }
     },
     _1: {
-      TAG: /* App */6,
+      TAG: /* App */8,
       _0: {
         TAG: /* Var */2,
         _0: "h"
@@ -572,7 +622,7 @@ var test = {
       }
     },
     _2: {
-      TAG: /* App */6,
+      TAG: /* App */8,
       _0: {
         TAG: /* Var */2,
         _0: "h"
@@ -589,7 +639,139 @@ var inferred = check_expr(/* [] */0, test, 0);
 
 console.log(toString(inferred));
 
+var fact = {
+  TAG: /* Let */9,
+  _0: "fac",
+  _1: {
+    TAG: /* Fun */7,
+    _0: "n",
+    _1: {
+      TAG: /* If */3,
+      _0: {
+        TAG: /* Leq */6,
+        _0: {
+          TAG: /* Var */2,
+          _0: "n"
+        },
+        _1: {
+          TAG: /* CstI */0,
+          _0: 0
+        }
+      },
+      _1: {
+        TAG: /* CstI */0,
+        _0: 1
+      },
+      _2: {
+        TAG: /* Mul */5,
+        _0: {
+          TAG: /* Var */2,
+          _0: "n"
+        },
+        _1: {
+          TAG: /* App */8,
+          _0: {
+            TAG: /* Var */2,
+            _0: "fac"
+          },
+          _1: {
+            TAG: /* Add */4,
+            _0: {
+              TAG: /* Var */2,
+              _0: "n"
+            },
+            _1: {
+              TAG: /* CstI */0,
+              _0: -1
+            }
+          }
+        }
+      }
+    }
+  },
+  _2: {
+    TAG: /* App */8,
+    _0: {
+      TAG: /* Var */2,
+      _0: "fac"
+    },
+    _1: {
+      TAG: /* CstI */0,
+      _0: 5
+    }
+  }
+};
+
+var fact_inferred = check_expr(/* [] */0, fact, 0);
+
+console.log(toString(fact_inferred));
+
+var more_fact = {
+  TAG: /* Let */9,
+  _0: "facc",
+  _1: {
+    TAG: /* Fun */7,
+    _0: "m",
+    _1: {
+      TAG: /* Fun */7,
+      _0: "n",
+      _1: {
+        TAG: /* If */3,
+        _0: {
+          TAG: /* Leq */6,
+          _0: {
+            TAG: /* Var */2,
+            _0: "n"
+          },
+          _1: {
+            TAG: /* CstI */0,
+            _0: 0
+          }
+        },
+        _1: {
+          TAG: /* Var */2,
+          _0: "m"
+        },
+        _2: {
+          TAG: /* App */8,
+          _0: {
+            TAG: /* App */8,
+            _0: {
+              TAG: /* Var */2,
+              _0: "facc"
+            },
+            _1: {
+              TAG: /* Var */2,
+              _0: "m"
+            }
+          },
+          _1: {
+            TAG: /* Add */4,
+            _0: {
+              TAG: /* Var */2,
+              _0: "n"
+            },
+            _1: {
+              TAG: /* CstI */0,
+              _0: -1
+            }
+          }
+        }
+      }
+    }
+  },
+  _2: {
+    TAG: /* Var */2,
+    _0: "facc"
+  }
+};
+
+var facc_inferred = check_expr(/* [] */0, more_fact, 0);
+
+console.log(toString(facc_inferred));
+
 var LvLetPoly = {
+  toStringE: toStringE,
   toString: toString,
   tvar_cnt: tvar_cnt,
   fresh_name: fresh_name,
@@ -608,7 +790,11 @@ var LvLetPoly = {
   check_expr: check_expr,
   infer: infer,
   test: test,
-  inferred: inferred
+  inferred: inferred,
+  fact: fact,
+  fact_inferred: fact_inferred,
+  more_fact: more_fact,
+  facc_inferred: facc_inferred
 };
 
 exports.LvLetPoly = LvLetPoly;

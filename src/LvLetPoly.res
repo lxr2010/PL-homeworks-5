@@ -5,9 +5,23 @@ module LvLetPoly = {
   type rec expr = CstI(int) | CstB(bool) | Var(string)
     | If(expr, expr, expr)
     | Add(expr, expr)
+    | Mul(expr, expr)
+    | Leq(expr, expr)
     | Fun(string, expr) | App(expr, expr)
     | Let(string, expr, expr)
 
+  let rec toStringE= (e: expr) => switch e {
+    | CstI(i) => Js.Int.toString(i)
+    | CstB(b) => if b {"True"} else {"False"}
+    | Var(s) => s 
+    | If(c, e1, e2) => "If (" ++ c->toStringE ++ ") then { " ++ e1->toStringE ++ " } else { " ++ e2->toStringE ++ " }"
+    | Add(e1, e2) => "( " ++ e1->toStringE ++ "+" ++ e2->toStringE ++ " )"
+    | Mul(e1, e2) => "( " ++ e1->toStringE ++ "*" ++ e2->toStringE ++ " )"
+    | Leq(e1, e2) =>  e1->toStringE ++ "<=" ++ e2->toStringE 
+    | Fun(x, e) => "fun " ++ x ++ " -> " ++ e->toStringE
+    | App(e1, e2) => "( " ++ e1->toStringE ++ " )( " ++ e2->toStringE ++ " )"
+    | Let(x, e1, e2) => "let " ++ x ++ " = " ++ e1->toStringE ++ " in " ++ e2->toStringE
+  }
 
   let rec toString = (t: typ) => switch t {
       | TInt => "Int"
@@ -186,8 +200,9 @@ module LvLetPoly = {
     fst
   }
 
-  let rec check_expr = (ctx: context, expr: expr, level: int) : typ => 
-    switch expr {
+  let rec check_expr = (ctx: context, expr: expr, level: int) : typ => {
+    Js.log("Checking " ++ expr->toStringE ++ " on level " ++ Js.Int.toString(level))
+    let res = switch expr {
       | CstI(_) => TInt
       | CstB(_) => TBool
       | Var(s) =>  switch ctx->Belt.List.getAssoc(s,(a,b)=>a==b) {
@@ -216,7 +231,7 @@ module LvLetPoly = {
         unify(t1, TArr(t2,tx))
         tx
       }
-      | Add(e1, e2) => {
+      | Add(e1, e2) | Mul(e1, e2) => {
         let tx = new_tvar(level)
         let t1 = check_expr(ctx, e1, level)
         let t2 = check_expr(ctx, e2, level)
@@ -225,14 +240,27 @@ module LvLetPoly = {
         unify(t2,TInt)
         tx
       }
+      | Leq(e1,e2) => {
+        let tx = new_tvar(level)
+        let t1 = check_expr(ctx, e1, level)
+        let t2 = check_expr(ctx, e2, level)
+        unify(tx, TBool)
+        unify(t1, TInt)
+        unify(t2, TInt)
+        tx
+      }
       | Let(x, e1, e2) => {
-        let t1 = check_expr(ctx, e1, level+1)
+        let tx = new_tvar(level+1)
+        let t1 = check_expr(list{(x,tx),...ctx}, e1, level+1)
         let ctx' = list{(x, gen(t1, level)), ...ctx}
         let t2 = check_expr(ctx', e2, level)
+        unify(tx, t1)
         Js.log(ctx'->toStringSubst)
         t2
       }
     }
+    res 
+  }
 
   let infer = (expr: expr) : typ => { 
     let t = check_expr(list{}, expr, 0)
@@ -242,5 +270,21 @@ module LvLetPoly = {
   let test = Let("h",Fun("f",Let("g",Var("f"),Var("g"))),If(App(Var("h"),CstB(true)),App(Var("h"),CstI(1)),App(Var("h"),CstI(0))))
   let inferred = infer(test)
   Js.log(inferred->toString)
+
+  let fact = Let("fac",
+      Fun("n",If(Leq(Var("n"),CstI(0)), 
+                CstI(1),
+                Mul(Var("n"),App(Var("fac"),Add(Var("n"),CstI(-1)))))),
+      App(Var("fac"),CstI(5)))
+  let fact_inferred = infer(fact)
+  Js.log(fact_inferred->toString)
+
+  let more_fact = Let("facc",
+      Fun("m",Fun("n",If(Leq(Var("n"),CstI(0)), 
+                      Var("m"),
+                      App(App(Var("facc"),Var("m")),Add(Var("n"),CstI(-1)))))),
+      Var("facc"))
+  let facc_inferred = infer(more_fact)
+  Js.log(facc_inferred->toString)
 
 }
