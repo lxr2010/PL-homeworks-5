@@ -417,9 +417,7 @@ function type_subst(t, s) {
 
 function infer(expr) {
   var match = check_expr(/* [] */0, expr);
-  var cs = match[1];
-  console.log(toStringCstr(cs));
-  var s = solve(cs);
+  var s = solve(match[1]);
   return type_subst(match[0], s);
 }
 
@@ -643,7 +641,7 @@ function unify(_t1, _t2) {
                 RE_EXN_ID: "Assert_failure",
                 _1: [
                   "Stlc.res",
-                  254,
+                  253,
                   10
                 ],
                 Error: new Error()
@@ -655,7 +653,7 @@ function unify(_t1, _t2) {
                   RE_EXN_ID: "Assert_failure",
                   _1: [
                     "Stlc.res",
-                    248,
+                    247,
                     12
                   ],
                   Error: new Error()
@@ -688,7 +686,7 @@ function check_expr$1(ctx, expr) {
               RE_EXN_ID: "Assert_failure",
               _1: [
                 "Stlc.res",
-                268,
+                267,
                 15
               ],
               Error: new Error()
