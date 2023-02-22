@@ -475,7 +475,6 @@ function gen(ty, level) {
 }
 
 function check_expr(ctx, expr, level) {
-  console.log("Checking " + toStringE(expr) + " on level " + level.toString());
   switch (expr.TAG | 0) {
     case /* CstI */0 :
         return /* TInt */0;
@@ -492,7 +491,7 @@ function check_expr(ctx, expr, level) {
               RE_EXN_ID: "Assert_failure",
               _1: [
                 "LvLetPoly.res",
-                210,
+                209,
                 15
               ],
               Error: new Error()
@@ -578,7 +577,28 @@ function infer(expr) {
   return check_expr(/* [] */0, expr, 0);
 }
 
-var test = {
+var LvLetPoly = {
+  toStringE: toStringE,
+  toString: toString,
+  tvar_cnt: tvar_cnt,
+  fresh_name: fresh_name,
+  new_tvar: new_tvar,
+  inst_map: inst_map,
+  fresh_inst: fresh_inst,
+  new_inst: new_inst,
+  occurs: occurs,
+  repr_type: repr_type,
+  get_level: get_level,
+  prune_level: prune_level,
+  unify: unify,
+  toStringSubst: toStringSubst,
+  inst: inst,
+  gen: gen,
+  check_expr: check_expr,
+  infer: infer
+};
+
+var test0 = {
   TAG: /* Let */9,
   _0: "h",
   _1: {
@@ -634,10 +654,6 @@ var test = {
     }
   }
 };
-
-var inferred = check_expr(/* [] */0, test, 0);
-
-console.log(toString(inferred));
 
 var fact = {
   TAG: /* Let */9,
@@ -702,10 +718,6 @@ var fact = {
   }
 };
 
-var fact_inferred = check_expr(/* [] */0, fact, 0);
-
-console.log(toString(fact_inferred));
-
 var more_fact = {
   TAG: /* Let */9,
   _0: "facc",
@@ -766,36 +778,42 @@ var more_fact = {
   }
 };
 
-var facc_inferred = check_expr(/* [] */0, more_fact, 0);
-
-console.log(toString(facc_inferred));
-
-var LvLetPoly = {
-  toStringE: toStringE,
-  toString: toString,
-  tvar_cnt: tvar_cnt,
-  fresh_name: fresh_name,
-  new_tvar: new_tvar,
-  inst_map: inst_map,
-  fresh_inst: fresh_inst,
-  new_inst: new_inst,
-  occurs: occurs,
-  repr_type: repr_type,
-  get_level: get_level,
-  prune_level: prune_level,
-  unify: unify,
-  toStringSubst: toStringSubst,
-  inst: inst,
-  gen: gen,
-  check_expr: check_expr,
-  infer: infer,
-  test: test,
-  inferred: inferred,
-  fact: fact,
-  fact_inferred: fact_inferred,
-  more_fact: more_fact,
-  facc_inferred: facc_inferred
+var tests_1 = {
+  hd: fact,
+  tl: {
+    hd: more_fact,
+    tl: /* [] */0
+  }
 };
 
+var tests = {
+  hd: test0,
+  tl: tests_1
+};
+
+function run_test(ts) {
+  Belt_List.forEach(ts, (function (t) {
+          console.log("Expr: " + toStringE(t));
+          var inferred = check_expr(/* [] */0, t, 0);
+          console.log(toString(inferred));
+        }));
+}
+
+function run(param) {
+  run_test(tests);
+}
+
+var Test = {
+  test0: test0,
+  fact: fact,
+  more_fact: more_fact,
+  tests: tests,
+  run_test: run_test,
+  run: run
+};
+
+run_test(tests);
+
 exports.LvLetPoly = LvLetPoly;
-/* inferred Not a pure module */
+exports.Test = Test;
+/*  Not a pure module */

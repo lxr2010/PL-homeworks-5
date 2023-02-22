@@ -201,7 +201,6 @@ module LvLetPoly = {
   }
 
   let rec check_expr = (ctx: context, expr: expr, level: int) : typ => {
-    Js.log("Checking " ++ expr->toStringE ++ " on level " ++ Js.Int.toString(level))
     let res = switch expr {
       | CstI(_) => TInt
       | CstB(_) => TBool
@@ -267,24 +266,37 @@ module LvLetPoly = {
     t
   }
 
-  let test = Let("h",Fun("f",Let("g",Var("f"),Var("g"))),If(App(Var("h"),CstB(true)),App(Var("h"),CstI(1)),App(Var("h"),CstI(0))))
-  let inferred = infer(test)
-  Js.log(inferred->toString)
+}
 
+module Test = {
+  open! LvLetPoly
+  let test0 = Let("h",Fun("f",Let("g",Var("f"),Var("g"))),If(App(Var("h"),CstB(true)),App(Var("h"),CstI(1)),App(Var("h"),CstI(0))))
   let fact = Let("fac",
       Fun("n",If(Leq(Var("n"),CstI(0)), 
                 CstI(1),
                 Mul(Var("n"),App(Var("fac"),Add(Var("n"),CstI(-1)))))),
       App(Var("fac"),CstI(5)))
-  let fact_inferred = infer(fact)
-  Js.log(fact_inferred->toString)
-
   let more_fact = Let("facc",
       Fun("m",Fun("n",If(Leq(Var("n"),CstI(0)), 
                       Var("m"),
                       App(App(Var("facc"),Var("m")),Add(Var("n"),CstI(-1)))))),
       Var("facc"))
-  let facc_inferred = infer(more_fact)
-  Js.log(facc_inferred->toString)
+  
+  let tests = list{
+    test0, fact, more_fact
+  }
 
+  let run_test = (ts: list<expr>) :  () => {
+    ts->Belt.List.forEach(t=>{
+      Js.log("Expr: " ++ t->toStringE)
+      let inferred = infer(t)
+      Js.log(inferred->toString)
+    })
+  }
+
+  let run = () => {
+    let _ = run_test(tests)
+  }
 }
+
+Test.run()
