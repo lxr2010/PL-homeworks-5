@@ -34,7 +34,7 @@ module LetPoly = {
      |Some (n) => n
      |None => 0
     }
-    let _ = Belt.List.setAssoc(inst_map.contents, qs, inst_cnt+1, (a,b)=>a==b)
+    inst_map.contents = Belt.List.setAssoc(inst_map.contents, qs, inst_cnt+1, (a,b)=>a==b)
     ref(Nolink(qs ++ "_" ++ Js.Int.toString(inst_cnt+1)))
   }
   let new_inst = (qs: string) :typ => TVar(fresh_inst(qs))
@@ -79,7 +79,7 @@ module LetPoly = {
       | _ => false 
     }
     | TArr(t1, t2) => occurs(x, t1) || occurs(x, t2)
-    | QVar(s) => false // Not sure
+    | QVar(_) => false 
   }
 
   let rec repr_type = (t:typ): typ => {
@@ -157,7 +157,7 @@ module LetPoly = {
         | Linkto(xt) => get_tvar_nolink_in_typ(xt)
       }
       | TArr(x, y) => Belt.List.concatMany([get_tvar_nolink_in_typ(x), get_tvar_nolink_in_typ(y)])
-      | QVar(qs) => assert false // Rank-1 polymorphism restriction
+      | QVar(_) => assert false // Rank-1 polymorphism restriction
     } 
 
     let getKey = (p: (string,typ)) => {
