@@ -83,7 +83,7 @@ module LvLetPoly = {
     | _ => assert false 
   }
 
-  // make sure all tvars' level equal or greater than level
+  // make sure all tvars' level equal or smaller than level
   let prune_level = (level: option<int>, ty: typ):() => {
     let rec checker = (t: typ, lv: int) => switch t {
       | TInt | TBool => ()
