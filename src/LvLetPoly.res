@@ -183,7 +183,6 @@ module LvLetPoly = {
     }
 
     let fst = go(ty)
-    Js.log("Gen: "++ty->toString ++ " to: " ++ fst->toString)
     fst
   }
 
@@ -230,6 +229,7 @@ module LvLetPoly = {
         let t1 = check_expr(ctx, e1, level+1)
         let ctx' = list{(x, gen(t1, level)), ...ctx}
         let t2 = check_expr(ctx', e2, level)
+        Js.log(ctx'->toStringSubst)
         t2
       }
     }
@@ -239,8 +239,7 @@ module LvLetPoly = {
     t
   }
 
-  // let test = Let("h",Fun("f",Let("g",Var("f"),Var("g"))),If(App(Var("h"),CstB(true)),App(Var("h"),CstI(1)),App(Var("h"),CstI(0))))
-  let test = Let("h",Fun("f",Let("g",Var("f"),App(Var("g"),CstI(42)))), Var("h"))
+  let test = Let("h",Fun("f",Let("g",Var("f"),Var("g"))),If(App(Var("h"),CstB(true)),App(Var("h"),CstI(1)),App(Var("h"),CstI(0))))
   let inferred = infer(test)
   Js.log(inferred->toString)
 

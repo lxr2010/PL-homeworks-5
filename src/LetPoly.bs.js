@@ -485,17 +485,15 @@ function gen(ty, ctx) {
       
     }
   };
-  var match = go(ty, Belt_List.map(freetvars, (function (x) {
-              return [
-                      x,
-                      {
-                        TAG: /* QVar */2,
-                        _0: x
-                      }
-                    ];
-            })));
-  console.log("Gen: " + toString(ty) + " ctx: " + toStringSubst(ctx));
-  return match[0];
+  return go(ty, Belt_List.map(freetvars, (function (x) {
+                      return [
+                              x,
+                              {
+                                TAG: /* QVar */2,
+                                _0: x
+                              }
+                            ];
+                    })))[0];
 }
 
 function check_expr(ctx, expr) {
@@ -515,7 +513,7 @@ function check_expr(ctx, expr) {
               RE_EXN_ID: "Assert_failure",
               _1: [
                 "LetPoly.res",
-                221,
+                220,
                 15
               ],
               Error: new Error()
@@ -584,7 +582,6 @@ function check_expr(ctx, expr) {
           tl: ctx
         };
         var t2$3 = check_expr(ctx$p, expr._2);
-        console.log(toString(t2$3));
         console.log(toStringSubst(ctx$p));
         return t2$3;
     

@@ -441,93 +441,87 @@ function gen(ty, level) {
       
     }
   };
-  var fst = go(ty);
-  console.log("Gen: " + toString(ty) + " to: " + toString(fst));
-  return fst;
+  return go(ty);
 }
 
-function check_expr(_ctx, _expr, level) {
-  while(true) {
-    var expr = _expr;
-    var ctx = _ctx;
-    switch (expr.TAG | 0) {
-      case /* CstI */0 :
-          return /* TInt */0;
-      case /* CstB */1 :
-          return /* TBool */1;
-      case /* Var */2 :
-          var ts = Belt_List.getAssoc(ctx, expr._0, (function (a, b) {
-                  return a === b;
-                }));
-          if (ts !== undefined) {
-            return inst(ts, level);
-          }
-          throw {
-                RE_EXN_ID: "Assert_failure",
-                _1: [
-                  "LvLetPoly.res",
-                  196,
-                  15
-                ],
-                Error: new Error()
-              };
-      case /* If */3 :
-          var tx = new_tvar(level);
-          var t1 = check_expr(ctx, expr._0, level);
-          var t2 = check_expr(ctx, expr._1, level);
-          var t3 = check_expr(ctx, expr._2, level);
-          unify(t1, /* TBool */1);
-          unify(t2, tx);
-          unify(t3, tx);
-          return tx;
-      case /* Add */4 :
-          var tx$1 = new_tvar(level);
-          var t1$1 = check_expr(ctx, expr._0, level);
-          var t2$1 = check_expr(ctx, expr._1, level);
-          unify(tx$1, /* TInt */0);
-          unify(t1$1, /* TInt */0);
-          unify(t2$1, /* TInt */0);
-          return tx$1;
-      case /* Fun */5 :
-          var tx$2 = new_tvar(level);
-          var te = check_expr({
-                hd: [
-                  expr._0,
-                  tx$2
-                ],
-                tl: ctx
-              }, expr._1, level + 1 | 0);
-          return {
-                  TAG: /* TArr */0,
-                  _0: tx$2,
-                  _1: te
-                };
-      case /* App */6 :
-          var tx$3 = new_tvar(level);
-          var t1$2 = check_expr(ctx, expr._0, level);
-          var t2$2 = check_expr(ctx, expr._1, level);
-          unify(t1$2, {
+function check_expr(ctx, expr, level) {
+  switch (expr.TAG | 0) {
+    case /* CstI */0 :
+        return /* TInt */0;
+    case /* CstB */1 :
+        return /* TBool */1;
+    case /* Var */2 :
+        var ts = Belt_List.getAssoc(ctx, expr._0, (function (a, b) {
+                return a === b;
+              }));
+        if (ts !== undefined) {
+          return inst(ts, level);
+        }
+        throw {
+              RE_EXN_ID: "Assert_failure",
+              _1: [
+                "LvLetPoly.res",
+                195,
+                15
+              ],
+              Error: new Error()
+            };
+    case /* If */3 :
+        var tx = new_tvar(level);
+        var t1 = check_expr(ctx, expr._0, level);
+        var t2 = check_expr(ctx, expr._1, level);
+        var t3 = check_expr(ctx, expr._2, level);
+        unify(t1, /* TBool */1);
+        unify(t2, tx);
+        unify(t3, tx);
+        return tx;
+    case /* Add */4 :
+        var tx$1 = new_tvar(level);
+        var t1$1 = check_expr(ctx, expr._0, level);
+        var t2$1 = check_expr(ctx, expr._1, level);
+        unify(tx$1, /* TInt */0);
+        unify(t1$1, /* TInt */0);
+        unify(t2$1, /* TInt */0);
+        return tx$1;
+    case /* Fun */5 :
+        var tx$2 = new_tvar(level);
+        var te = check_expr({
+              hd: [
+                expr._0,
+                tx$2
+              ],
+              tl: ctx
+            }, expr._1, level + 1 | 0);
+        return {
                 TAG: /* TArr */0,
-                _0: t2$2,
-                _1: tx$3
-              });
-          return tx$3;
-      case /* Let */7 :
-          var t1$3 = check_expr(ctx, expr._1, level + 1 | 0);
-          var ctx$p_0 = [
-            expr._0,
-            gen(t1$3, level)
-          ];
-          var ctx$p = {
-            hd: ctx$p_0,
-            tl: ctx
-          };
-          _expr = expr._2;
-          _ctx = ctx$p;
-          continue ;
-      
-    }
-  };
+                _0: tx$2,
+                _1: te
+              };
+    case /* App */6 :
+        var tx$3 = new_tvar(level);
+        var t1$2 = check_expr(ctx, expr._0, level);
+        var t2$2 = check_expr(ctx, expr._1, level);
+        unify(t1$2, {
+              TAG: /* TArr */0,
+              _0: t2$2,
+              _1: tx$3
+            });
+        return tx$3;
+    case /* Let */7 :
+        var t1$3 = check_expr(ctx, expr._1, level + 1 | 0);
+        var ctx$p_0 = [
+          expr._0,
+          gen(t1$3, level)
+        ];
+        var ctx$p = {
+          hd: ctx$p_0,
+          tl: ctx
+        };
+        var t2$3 = check_expr(ctx$p, expr._2, level);
+        console.log(toStringSubst(ctx$p));
+        return t2$3;
+    
+  }
 }
 
 function infer(expr) {
@@ -548,21 +542,46 @@ var test = {
         _0: "f"
       },
       _2: {
-        TAG: /* App */6,
-        _0: {
-          TAG: /* Var */2,
-          _0: "g"
-        },
-        _1: {
-          TAG: /* CstI */0,
-          _0: 42
-        }
+        TAG: /* Var */2,
+        _0: "g"
       }
     }
   },
   _2: {
-    TAG: /* Var */2,
-    _0: "h"
+    TAG: /* If */3,
+    _0: {
+      TAG: /* App */6,
+      _0: {
+        TAG: /* Var */2,
+        _0: "h"
+      },
+      _1: {
+        TAG: /* CstB */1,
+        _0: true
+      }
+    },
+    _1: {
+      TAG: /* App */6,
+      _0: {
+        TAG: /* Var */2,
+        _0: "h"
+      },
+      _1: {
+        TAG: /* CstI */0,
+        _0: 1
+      }
+    },
+    _2: {
+      TAG: /* App */6,
+      _0: {
+        TAG: /* Var */2,
+        _0: "h"
+      },
+      _1: {
+        TAG: /* CstI */0,
+        _0: 0
+      }
+    }
   }
 };
 

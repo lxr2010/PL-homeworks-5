@@ -207,7 +207,6 @@ module LetPoly = {
       | QVar(_) => assert false // Rank-1 polymorphism restriction
     }
     let (fst,_) = go(ty, freetvars->Belt.List.map(x=>(x,QVar(x))))
-    Js.log("Gen: "++ty->toString ++ " ctx: " ++ ctx->toStringSubst)
     fst
   }
 
@@ -255,7 +254,6 @@ module LetPoly = {
         let t1 = check_expr(ctx, e1)
         let ctx' = list{(x, gen(t1, ctx)), ...ctx}
         let t2 = check_expr(ctx', e2)
-        Js.log(t2->toString)
         Js.log(ctx'->toStringSubst)
         t2
       }
@@ -270,5 +268,4 @@ module LetPoly = {
   let inferred = infer(test)
   Js.log(inferred->toString)
 
-  
 }
