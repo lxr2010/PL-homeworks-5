@@ -94,7 +94,7 @@ function fresh_inst(qs) {
           return a === b;
         }));
   var inst_cnt = n !== undefined ? n : 0;
-  Belt_List.setAssoc(inst_map.contents, qs, inst_cnt + 1 | 0, (function (a, b) {
+  inst_map.contents = Belt_List.setAssoc(inst_map.contents, qs, inst_cnt + 1 | 0, (function (a, b) {
           return a === b;
         }));
   return qs + "_" + (inst_cnt + 1 | 0).toString();

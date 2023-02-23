@@ -47,7 +47,7 @@ module LvLetPoly = {
      |Some (n) => n
      |None => 0
     }
-    let _ = Belt.List.setAssoc(inst_map.contents, qs, inst_cnt+1, (a,b)=>a==b)
+    inst_map.contents = Belt.List.setAssoc(inst_map.contents, qs, inst_cnt+1, (a,b)=>a==b)
     qs ++ "_" ++ Js.Int.toString(inst_cnt+1)
   }
   let new_inst = (qs: string, level:int) :typ => TVar(ref(Nolink(fresh_inst(qs),level)))
